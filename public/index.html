@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="reset.css">
+    <link rel="stylesheet" href="style.css">
+    <title>Document</title>
+</head>
+<body>
+    <h1>submit your <br><span>dilemma's</span></h1>
+    <p><a href="#" id="remoteUrl">Open remote</a></p>
+    <div id="qrcode"></div>
+
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" integrity="sha512-ZDSPMa/JM1D+7kdg2x3BsruQ6T/JpJo3jWDWkCZsP+5yVyp1KfESqLI+7RqB5k24F7p2cV7i2YHh/890y6P6Sw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+    {
+
+        let socket;
+        let remoteUrl = document.getElementById('remoteUrl');
+
+
+        const init = () => {
+            socket = io();
+
+            socket.on('connect', () => {
+                console.log(`Connected: ${socket.id}`);
+
+                //get the IP address of the server
+                const ip = window.location.hostname;
+
+                const url = `${window.location}/remote.html?targetSocketId=${socket.id}`;
+
+                remoteUrl.href = url;
+
+                const typeNumber = 4;
+                const errorCorrectionLevel = 'L';
+                const qr = qrcode(typeNumber, errorCorrectionLevel);
+                qr.addData(url);
+                qr.make();
+                document.getElementById('qrcode').innerHTML = qr.createImgTag();
+
+
+
+            });
+        }; 
+
+        init();
+
+    }
+
+    </script>
+</body>
+</html>
