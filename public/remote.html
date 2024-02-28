@@ -8,13 +8,81 @@
     <title>Document</title>
 </head>
 <body>
-    <h1>this is remote <br><span>get reckt</span></h1>
+    <form id="form">
+        <div class="dilemma">
+            <input type="text" id="option1" placeholder="option1">
+            <p>or</p>
+            <input type="text" id="option2" placeholder="option2">
+            <div class="buttons">
+                <button class="button" id="submit" type="submit">submit dilemma</button>
+                <button class="button" id="start">Start</button>
+            </div>
+        </div>
+        
+    </form>
 
-  
     <script src="/socket.io/socket.io.js"></script>
     <script>
     {
+        let socket;
+        const dilemma = document.querySelector('.dilemma');
+
+
+        const init = () => {
+            socket = io();
+
+            socket.on('connect', () => {
+                console.log(`Connected: ${socket.id}`);
+
+                //get the IP address of the server
+                const ip = window.location.hostname;
+
+                const url = `${window.location}/remote.html?targetSocketId=${socket.id}`;
+
+                socket.emit('get-client-count');
+                socket.on('client-count', (count) => {
+
+                //add the values of the options in an array
+                const options = [];
+                const submit = document.getElementById('submit');
+                const start = document.getElementById('start');
+                const option1 = document.getElementById('option1');
+                const option2 = document.getElementById('option2');
+                const form = document.getElementById('form');
+
+                submit.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const option1Value = option1.value;
+                    const option2Value = option2.value;
+
+                    // Controleer of beide waarden ingevuld zijn
+                    if (option1Value && option2Value) {
+                        form.reset();
+
+                        console.log(option1Value, option2Value);
+
+                        // Verzend de waarden naar de server
+                        socket.emit('submit-dilemma', { option1: option1Value, option2: option2Value });
+                    } else {
+                        return;
+                }
+                });
+
+
+                socket.on('options-updated', (options) => {
+                    console.log('Options:', options);
+                });
+                    
+            });
+            
+            
         
+        });
+
+
+        }; 
+
+        init();
     }
     </script>
 </body>

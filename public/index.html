@@ -9,12 +9,20 @@
 </head>
 <body>
     <h1>submit your <br><span>dilemma's</span></h1>
-    <p><a href="#" id="remoteUrl">Open remote</a></p>
-    <div id="qrcode"></div>
+    <div class="scan">
+        <canvas id="qr" class="qr"></canvas>
+        <p><a href="#" id="remoteUrl">Join!</a></p>
+    </div>
+
+<div class="status">
+    <p class="devices" id="devices">No participants (yet)</p>
+    <p class="submitted" id="submitted">test 2</p>
+</div>
 
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" integrity="sha512-ZDSPMa/JM1D+7kdg2x3BsruQ6T/JpJo3jWDWkCZsP+5yVyp1KfESqLI+7RqB5k24F7p2cV7i2YHh/890y6P6Sw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js" integrity="sha512-pUhApVQtLbnpLtJn6DuzDD5o2xtmLJnJ7oBoMsBnzOkVkpqofGLGPaBJ6ayD2zQe3lCgCibhJBi4cj5wAxwVKA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
     <script>
     {
 
@@ -23,29 +31,59 @@
 
 
         const init = () => {
+                        
             socket = io();
+
+            socket.on('socket-id', (id) => {
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('socketId', id);
+            history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+            });
+            
+            
 
             socket.on('connect', () => {
                 console.log(`Connected: ${socket.id}`);
-
-                //get the IP address of the server
                 const ip = window.location.hostname;
 
-                const url = `${window.location}/remote.html?targetSocketId=${socket.id}`;
+                const url = `${new URL(`/remote.html?id=${socket.id}`, window.location)}`;
 
                 remoteUrl.href = url;
 
-                const typeNumber = 4;
-                const errorCorrectionLevel = 'L';
-                const qr = qrcode(typeNumber, errorCorrectionLevel);
-                qr.addData(url);
-                qr.make();
-                document.getElementById('qrcode').innerHTML = qr.createImgTag();
+                var qr = new QRious({
+                element: document.getElementById('qr'),
+                value: url,
+                size: 400,
+                background: 'transparent',
+                foreground: '#E50809',
+                level: 'L',
+                });
+
+                socket.emit('get-client-count');
+                socket.on('client-count', (count) => {
+                    console.log(`client-count: ${count}`);
+                    if (count === 2) {
+                        document.getElementById('devices').innerText = `${count-1} participant registered`;
+                    } else {
+                        document.getElementById('devices').innerText = `${count-1} participants registered`;
+                    }
+
+                    //max 10 participants
+                    if (count === 11) {
+                        document.getElementById('devices').innerText = `Max 10 participants reached`;
+                    }
+
+                });
 
 
+                socket.on('options-updated', (options) => {
+                    console.log('Options:', options);
+                });
+            }); 
 
-            });
-        }; 
+
+    
+    }; 
 
         init();
 
