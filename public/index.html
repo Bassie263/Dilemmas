@@ -8,16 +8,21 @@
     <title>Document</title>
 </head>
 <body>
-    <h1>submit your <br><span>dilemma's</span></h1>
-    <div class="scan">
-        <canvas id="qr" class="qr"></canvas>
-        <p><a href="#" id="remoteUrl">Join!</a></p>
+    <div class="join">
+        <h1>submit your <br><span>dilemma's</span></h1>
+        <div class="scan">
+            <canvas id="qr" class="qr"></canvas>
+            <p><a href="#" id="remoteUrl">Join!</a></p>
+        </div>
+    
+        <div class="status">
+            <p class="devices" id="devices">No participants (yet)</p>
+            <p class="submitted" id="submitted">No dilemma's submitted yet</p>
+        </div>
     </div>
-
-<div class="status">
-    <p class="devices" id="devices">No participants (yet)</p>
-    <p class="submitted" id="submitted">test 2</p>
-</div>
+    <div class="dilemma">
+        <p class="vote-counts">0</p>
+    </div>
 
 
     <script src="/socket.io/socket.io.js"></script>
@@ -43,7 +48,6 @@
             
 
             socket.on('connect', () => {
-                console.log(`Connected: ${socket.id}`);
                 const ip = window.location.hostname;
 
                 const url = `${new URL(`/remote.html?id=${socket.id}`, window.location)}`;
@@ -61,7 +65,6 @@
 
                 socket.emit('get-client-count');
                 socket.on('client-count', (count) => {
-                    console.log(`client-count: ${count}`);
                     if (count === 2) {
                         document.getElementById('devices').innerText = `${count-1} participant registered`;
                     } else {
@@ -77,8 +80,46 @@
 
 
                 socket.on('options-updated', (options) => {
-                    console.log('Options:', options);
+                    console.log('Options:');
+                    options.forEach(([option1, option2]) => {
+                    console.log(`  - Option 1: ${option1}`);
+                    console.log(`  - Option 2: ${option2}`);
+                    });                    
+                    const length = options.length;
+                    if (length === 1) {
+                            document.getElementById('submitted').innerText = `1 dilemma submitted`;
+                        } else {
+                            document.getElementById('submitted').innerText = `${length} dilemma's submitted`;
+                        }
                 });
+
+                const $dilemma = document.querySelector('.dilemma');
+                const $join = document.querySelector('.join');
+                const $body = document.querySelector('body');
+
+                socket.on('start-dilemma', (options) => {
+                    console.log('Start button pressed, lets play!');
+                    $join.style.display = 'none';
+                    $dilemma.style.display = 'block';
+                    $body.style.backgroundImage = 'linear-gradient(90deg, rgba(241,136,150,1) 0%, rgba(229,8,9,1) 100%)';
+
+
+                    //display a random dilemma
+                    const random = Math.floor(Math.random() * options.length);
+                    const dilemma = options[random];
+                    $dilemma.innerHTML = `
+                    <div class='options'>
+                        <p class='option1'> ${dilemma[0]}</p>
+                        <p class='option2' >${dilemma[1]}</p>
+                    </div>
+                    `;
+                    
+
+
+                });
+
+
+
             }); 
 
 

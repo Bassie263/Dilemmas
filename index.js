@@ -1,4 +1,5 @@
-const express = require('express')
+const express = require('express');
+const { start } = require('repl');
 const app = express()
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
@@ -6,6 +7,7 @@ const io = require('socket.io')(http);
 const port = 100
 const clients = {};
 let clientCount = 0;
+let startCount = 0;
 
 const dilemmas = [];
 
@@ -22,16 +24,16 @@ io.on('connection', (socket) => {
     io.emit('client-count', clientCount); 
 
     clients[socket.id] = { id: socket.id };
-    console.log('Socket connected', socket.id);
+
+    //log the client count
+    console.log(`Client count: ${clientCount}`);
     
 
     socket.on('disconnect', () => {
-        console.log('Socket disconnected', socket.id);
         delete clients[socket.id];
         clientCount--;
         // broadcast
         io.emit('client-count', clientCount); 
-        console.log('clientCount', clientCount);
     });
 
     //give the user a socket id
@@ -42,11 +44,8 @@ io.on('connection', (socket) => {
     Object.values(clients).forEach(client => {
         if (client.id !== socket.id) {
             socket.emit('new-client', client);
-            console.log('new-client', client);
         }
     });
-    console.log('clients', clients);
-    console.log('clientCount', clientCount);
 
     socket.on('submit-dilemma', (data) => {
         const options =[]
@@ -61,8 +60,21 @@ io.on('connection', (socket) => {
         const dilemmaCount = dilemmas.length;
         socket.emit('dilemma-count', dilemmaCount);
 
-        socket.emit('options-updated', dilemmas);
-        console.log('options', dilemmas);
+
+        io.emit('options-updated', dilemmas);
+    });
+
+    socket.on('start-dilemma', () => {
+
+        startCount++;
+        console.log(`Start button clicked ${startCount} times.`);
+
+        //if start button is clicked as many times as there are clients, then start the game
+        if (startCount === clientCount-1) {
+            io.emit('start-dilemma', dilemmas);
+            console.log('Game started');
+            startCount = 0;
+        }
     });
 
 

@@ -17,9 +17,11 @@
                 <button class="button" id="submit" type="submit">submit dilemma</button>
                 <button class="button" id="start">Start</button>
             </div>
-        </div>
-        
+        </div>        
     </form>
+
+    <p class="waiting"> waiting for opponents<br><span>...</span></p>
+
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -33,6 +35,9 @@
 
             socket.on('connect', () => {
                 console.log(`Connected: ${socket.id}`);
+
+                //send the socket id to the server
+                socket.emit('get-socket-id');
 
                 //get the IP address of the server
                 const ip = window.location.hostname;
@@ -49,6 +54,7 @@
                 const option1 = document.getElementById('option1');
                 const option2 = document.getElementById('option2');
                 const form = document.getElementById('form');
+                const waiting = document.querySelector('.waiting');
 
                 submit.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -68,9 +74,29 @@
                 }
                 });
 
+                start.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    form.style.display = 'none';
+                    waiting.style.display = 'block';
+
+                    
+
+
+                    //zend een bericht naar de server, die zegt dat de start knop is ingedrukt
+                    socket.emit('start-dilemma');
+                });
+
 
                 socket.on('options-updated', (options) => {
-                    console.log('Options:', options);
+                    console.log('Options:', options);  
+
+                });
+
+
+                socket.on('start-dilemma', () => {
+                    console.log('Start button pressed, lets play!');
+                    waiting.style.display = 'none';
+
                 });
                     
             });

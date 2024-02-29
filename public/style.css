@@ -30,6 +30,7 @@ body{
     font-family: 'SF-Pro-Rounded-Regular';
     margin: 0;
     padding: 0;
+    transition: .5s ease-in-out;
 }
 
 h1{
@@ -171,6 +172,42 @@ h1 span{
     background-color: var(--red);
     color: var(--lightpink);
 }
+
+.waiting{
+    display: none;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 3vw;
+    color: var(--white);
+}
+
+.options{
+    display: flex;
+    justify-content: space-around;
+    flex-flow: row;
+    width: 100%;
+    margin-top: 10vh;
+    padding: 3vw;
+}
+
+.options p{
+    width: 50%;
+    text-align: center;
+}
+
+.options .option1{
+    color: var(--red);
+
+}
+
+.options .option2{
+    color: var(--pink);
+}
+
+
+
+
 
 
 
