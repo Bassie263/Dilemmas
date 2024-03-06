@@ -21,7 +21,12 @@
         </div>
     </div>
     <div class="dilemma">
-        <p class="vote-counts">0</p>
+        
+    </div>
+
+    <div class="votes">
+        <div class="count1"></div>
+        <div class="count2"></div>
     </div>
 
 
@@ -49,78 +54,148 @@
 
             socket.on('connect', () => {
                 const ip = window.location.hostname;
+            }); 
 
-                const url = `${new URL(`/remote.html?id=${socket.id}`, window.location)}`;
+            const url = `${new URL(`/remote.html?id=${socket.id}`, window.location)}`;
 
-                remoteUrl.href = url;
+            const $count1 = document.querySelector('.count1');
+            const $count2 = document.querySelector('.count2');
+            const $votes = document.querySelector('.votes');
 
-                var qr = new QRious({
-                element: document.getElementById('qr'),
-                value: url,
-                size: 400,
-                background: 'transparent',
-                foreground: '#E50809',
-                level: 'L',
-                });
 
-                socket.emit('get-client-count');
-                socket.on('client-count', (count) => {
-                    if (count === 2) {
-                        document.getElementById('devices').innerText = `${count-1} participant registered`;
+            remoteUrl.href = url;
+
+            var qr = new QRious({
+            element: document.getElementById('qr'),
+            value: url,
+            size: 200,
+            background: 'transparent',
+            foreground: '#E50809',
+            level: 'L',
+            });
+
+            socket.emit('get-client-count');
+            socket.on('client-count', (count) => {
+                if (count === 2) {
+                    document.getElementById('devices').innerText = `${count-1} participant registered`;
+                } else {
+                    document.getElementById('devices').innerText = `${count-1} participants registered`;
+                }
+
+                //max 10 participants
+                if (count === 11) {
+                    document.getElementById('devices').innerText = `Max 10 participants reached`;
+                }
+
+            });
+
+
+            socket.on('options-updated', (options) => {
+                console.log('Options:');
+                options.forEach(([option1, option2]) => {
+                console.log(`  - Option 1: ${option1}`);
+                console.log(`  - Option 2: ${option2}`);
+                });                    
+                const length = options.length;
+                if (length === 1) {
+                        document.getElementById('submitted').innerText = `1 dilemma submitted`;
                     } else {
-                        document.getElementById('devices').innerText = `${count-1} participants registered`;
+                        document.getElementById('submitted').innerText = `${length} dilemma's submitted`;
                     }
+            });
 
-                    //max 10 participants
-                    if (count === 11) {
-                        document.getElementById('devices').innerText = `Max 10 participants reached`;
-                    }
+            const $dilemma = document.querySelector('.dilemma');
+            const $join = document.querySelector('.join');
+            const $body = document.querySelector('body');
 
-                });
-
-
-                socket.on('options-updated', (options) => {
-                    console.log('Options:');
-                    options.forEach(([option1, option2]) => {
-                    console.log(`  - Option 1: ${option1}`);
-                    console.log(`  - Option 2: ${option2}`);
-                    });                    
-                    const length = options.length;
-                    if (length === 1) {
-                            document.getElementById('submitted').innerText = `1 dilemma submitted`;
-                        } else {
-                            document.getElementById('submitted').innerText = `${length} dilemma's submitted`;
-                        }
-                });
-
-                const $dilemma = document.querySelector('.dilemma');
-                const $join = document.querySelector('.join');
-                const $body = document.querySelector('body');
-
-                socket.on('start-dilemma', (options) => {
-                    console.log('Start button pressed, lets play!');
-                    $join.style.display = 'none';
-                    $dilemma.style.display = 'block';
-                    $body.style.backgroundImage = 'linear-gradient(90deg, rgba(241,136,150,1) 0%, rgba(229,8,9,1) 100%)';
+            socket.on('start-dilemma', (options) => {
+                console.log('Start button pressed, lets play!');
+                $join.style.display = 'none';
+                $dilemma.style.display = 'block';
+                $body.style.backgroundImage = 'linear-gradient(90deg, rgba(241,136,150,1) 0%, rgba(229,8,9,1) 100%)';
 
 
-                    //display a random dilemma
-                    const random = Math.floor(Math.random() * options.length);
-                    const dilemma = options[random];
+                //display the last dilemma in the array
+                const dilemma = options[options.length - 1];
+                $dilemma.innerHTML = `
+                <div class='options'>
+                    <p class='option1'> ${dilemma[0]}</p>
+                    <p>or</p>
+                    <p class='option2' >${dilemma[1]}</p>
+                </div>
+                `;
+                
+
+
+            });
+
+            function toRomanNumerals(num) {
+            if (isNaN(num)) {
+                return 'Invalid input';
+            }
+
+            const numerals = {
+                M: 1000,
+                CM: 900,
+                D: 500,
+                CD: 400,
+                C: 100,
+                XC: 90,
+                L: 50,
+                XL: 40,
+                X: 10,
+                IX: 9,
+                V: 5,
+                IV: 4,
+                I: 1,
+            };
+
+            let roman = '';
+            let remaining = num;
+
+            // Iterate through numerals in descending order
+            for (const key in numerals) {
+                const value = numerals[key];
+                while (remaining >= value) {
+                roman += key;
+                remaining -= value;
+                }
+            }
+
+            return roman;
+            }
+
+            socket.on('vote-count', (data) => {
+                // Convert counts to Roman numerals
+                const romanCount1 = toRomanNumerals(data.count1);
+                const romanCount2 = toRomanNumerals(data.count2);
+
+                // Update the HTML with Roman numerals
+                $count1.innerHTML = `<p> ${romanCount1}</p>`;
+                $count2.innerHTML = `<p> ${romanCount2}</p>`;
+            });
+
+            
+
+            socket.on ('winner', (winner) =>{
+                //display a tie
+                if (winner === 'It is a tie') {
                     $dilemma.innerHTML = `
                     <div class='options'>
-                        <p class='option1'> ${dilemma[0]}</p>
-                        <p class='option2' >${dilemma[1]}</p>
-                    </div>
-                    `;
-                    
+                        <p>It's a tie!</p>
+                    </div>`;
+                    $votes.style.display = 'none';
 
 
-                });
+                } else {
+                    $dilemma.innerHTML = `
+                    <div class='options'>
+                        <p>voted winner: <br>${winner}</p>
+                    </div>`;
+                    $votes.style.display = 'none';
 
-
-
-            }); 
+                }
+            });
 
 
     

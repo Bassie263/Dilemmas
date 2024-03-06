@@ -19,8 +19,12 @@
             </div>
         </div>        
     </form>
+    <div class="options-remote">
+
+    </div>
 
     <p class="waiting"> waiting for opponents<br><span>...</span></p>
+
 
 
     <script src="/socket.io/socket.io.js"></script>
@@ -43,8 +47,9 @@
                 const ip = window.location.hostname;
 
                 const url = `${window.location}/remote.html?targetSocketId=${socket.id}`;
+            });
 
-                socket.emit('get-client-count');
+            socket.emit('get-client-count');
                 socket.on('client-count', (count) => {
 
                 //add the values of the options in an array
@@ -78,10 +83,6 @@
                     e.preventDefault();
                     form.style.display = 'none';
                     waiting.style.display = 'block';
-
-                    
-
-
                     //zend een bericht naar de server, die zegt dat de start knop is ingedrukt
                     socket.emit('start-dilemma');
                 });
@@ -92,14 +93,68 @@
 
                 });
 
+                const $body = document.querySelector('body');
+                const $options = document.querySelector('.options-remote');
 
-                socket.on('start-dilemma', () => {
+                socket.on('start-dilemma', (options) => {
                     console.log('Start button pressed, lets play!');
                     waiting.style.display = 'none';
 
-                });
+                    $body.style.backgroundImage = 'linear-gradient(90deg, rgba(241,136,150,1) 0%, rgba(229,8,9,1) 100%)';
+
+
+                    //display a random dilemma
+                    const dilemma = options[options.length - 1];
+                    $options.style.display = 'flex';
+                    $options.innerHTML = 
+                    `<p class='option1'> ${dilemma[0]}</p>
+                    <div class='vertical-line'></div>
+                    <p class='option2' >${dilemma[1]}</p>`;
+
+                    const $choice1 = document.querySelector('.option1');
+                    const $choice2 = document.querySelector('.option2');
+                    const $verticalLine = document.querySelector('.vertical-line');
                     
-            });
+                    $choice1.addEventListener('click', () => {
+                        socket.emit('choice-made', dilemma[0]);
+                        $options.style.justifyContent = 'center';
+                        $choice1.style.alignItems = 'center';
+                        $choice1.style.width = '100%';
+                        $choice1.innerHTML = `You chose <br> ${dilemma[0]}`;
+                        $choice2.style.display = 'none';
+                        $verticalLine.style.display = 'none';
+
+
+                    });
+
+                    $choice2.addEventListener('click', () => {
+                        socket.emit('choice-made', dilemma[1]);
+                        $options.style.justifyContent = 'center';
+                        $choice2.style.alignItems = 'center';
+                        $choice2.style.width = '100%';
+                        $choice2.innerHTML = `You chose <br> ${dilemma[1]}`;
+                        $choice1.style.display = 'none';
+                        $verticalLine.style.display = 'none';
+
+                    });
+
+                });
+
+                socket.on('winner', (winner) => {
+                    console.log('The winner is:', winner);
+
+                    //display a tie
+                    if (winner === 'It is a tie') {
+                        $options.innerHTML = `<p>It's a tie!<p>`;
+                    } else {
+                        $options.innerHTML = `<p>Voted winner:<br>${winner}</p>`;
+                    }
+
+
+
+                    
+                });
+
             
             
         
