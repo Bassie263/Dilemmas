@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="reset.css">
     <link rel="stylesheet" href="style.css">
     <title>Document</title>
+
 </head>
 <body>
     <form id="form">
@@ -19,9 +20,8 @@
             </div>
         </div>        
     </form>
-    <div class="options-remote">
+    <div class="options-remote"> </div>
 
-    </div>
 
     <p class="waiting"> waiting for opponents<br><span>...</span></p>
 
@@ -96,11 +96,23 @@
                 const $body = document.querySelector('body');
                 const $options = document.querySelector('.options-remote');
 
+                window.addEventListener('devicemotion', (event) => {
+                    const { acceleration } = event;
+                    const xAccel = acceleration.x;
+
+                    if (xAccel > 0) {
+                        // Vote for option 2
+                        socket.emit('choice-made', dilemma[1]);
+                    } else if (xAccel < 0) {
+                        // Vote for option 1
+                        socket.emit('choice-made', dilemma[0]);
+                    }
+                });
+
                 socket.on('start-dilemma', (options) => {
                     console.log('Start button pressed, lets play!');
                     waiting.style.display = 'none';
 
-                    $body.style.backgroundImage = 'linear-gradient(90deg, rgba(241,136,150,1) 0%, rgba(229,8,9,1) 100%)';
 
 
                     //display a random dilemma
@@ -150,10 +162,22 @@
                         $options.innerHTML = `<p>Voted winner:<br>${winner}</p>`;
                     }
 
-
-
-                    
                 });
+
+                //restart the game
+                socket.on('no-dilemmas', () => {
+                    $options.innerHTML = `<p>No dilemmas anymore</p>`;
+                    socket.off('restart');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 5000);
+                });
+
+
+                socket.on('restart', (dilemma) => {
+                    socket.emit('start-dilemma');
+                });
+
 
             
             

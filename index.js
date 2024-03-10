@@ -11,8 +11,8 @@ let clientCount = 0;
 let startCount = 0;
 let count1 = 0;
 let count2 = 0;
+let voteCount = 0;
 let winner;
-
 
 const dilemmas = [];
 
@@ -54,27 +54,19 @@ io.on('connection', (socket) => {
 
     socket.on('submit-dilemma', (data) => {
         const options =[]
-
         const { option1, option2 } = data;
         options.push(option1);
         options.push(option2);
-
         dilemmas.push(options);
-
         // count the number of dilemmas
         const dilemmaCount = dilemmas.length;
         socket.emit('dilemma-count', dilemmaCount);
-
-
         io.emit('options-updated', dilemmas);
     });
 
     socket.on('start-dilemma', () => {
-
         startCount++;
         console.log(`Start button clicked ${startCount} times.`);
-
-        //if start button is clicked as many or more times as there are clients, then start the game
 
 
         if (startCount >= clientCount-1) {
@@ -100,7 +92,7 @@ io.on('connection', (socket) => {
         console.log('count1:', count1);
         console.log('count2:', count2);
 
-        const voteCount = count1 + count2;
+        voteCount = count1 + count2;
         console.log('voteCount:', voteCount);
 
         if (voteCount >= clientCount-1) {
@@ -109,30 +101,31 @@ io.on('connection', (socket) => {
             if (count1 > count2){
                 winner = choice;
                 console.log('winner:', winner);
-
             } else if (count2 > count1){
-
                 winner = choice;
                 console.log('winner:', winner);
-
             } else if (count1 === count2){
-
                 winner = 'It is a tie';
             }
-
             io.emit('winner', winner);
-
             count1 = 0;
             count2 = 0;
+
+            setTimeout(() => {
+                dilemmas.pop();
+                //if the array is empty, send a message to the client
+                if (dilemmas.length === 0) {
+
+                    io.emit('no-dilemmas', 'There are no dilemmas left');
+                    console.log('No dilemmas left');
+                }
+                io.emit('restart', dilemmas);
+
+            }, 3000);
 
         }
 
     })
-
-
-
-    
-
 });
 
 

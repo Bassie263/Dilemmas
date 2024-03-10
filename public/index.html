@@ -61,6 +61,7 @@
             const $count1 = document.querySelector('.count1');
             const $count2 = document.querySelector('.count2');
             const $votes = document.querySelector('.votes');
+            const $next_btn = document.getElementById('next_btn');
 
 
             remoteUrl.href = url;
@@ -113,9 +114,9 @@
                 $join.style.display = 'none';
                 $dilemma.style.display = 'block';
                 $body.style.backgroundImage = 'linear-gradient(90deg, rgba(241,136,150,1) 0%, rgba(229,8,9,1) 100%)';
+                
+                //display the dilemma
 
-
-                //display the last dilemma in the array
                 const dilemma = options[options.length - 1];
                 $dilemma.innerHTML = `
                 <div class='options'>
@@ -186,16 +187,23 @@
                     </div>`;
                     $votes.style.display = 'none';
 
-
                 } else {
                     $dilemma.innerHTML = `
                     <div class='options'>
                         <p>voted winner: <br>${winner}</p>
                     </div>`;
                     $votes.style.display = 'none';
-
                 }
             });
+
+            socket.on('no-dilemmas', () => {
+                    console.log('No dilemmas anymore');
+                    $dilemma.innerHTML = `<p>play again!</p>`;
+
+                    setTimeout(() => {
+                        location.reload();
+                    }, 5000);
+                });
 
 
     

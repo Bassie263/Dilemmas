@@ -218,8 +218,10 @@ h1 span{
 .options-remote p{
     width: 50%;
     text-align: center;
-    font-size: 10vw;
+    font-size: 5vw;
     color: var(--white);
+    text-transform: uppercase;
+
 }
 
 .vertical-line{
@@ -239,6 +241,31 @@ h1 span{
     font-weight: bold;
     text-align: center;
     width: 50%;
+}
+
+.btn_wrapper{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.next_btn{
+    display: none;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 3vh;
+    background-color: var(--lightpink);
+    color: var(--red);
+    border: none;
+    border-radius: 5vw;
+    padding: 2vh;
+    margin-top: -50vh;
+    width: 20vw;
+    transition: .3s ease-in-out;
+    text-transform: uppercase;
+    font-weight: bold;
 }
 
 
